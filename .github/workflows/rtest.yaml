@@ -1,6 +1,13 @@
 name: rtest
 
-on:
+on: 
+  push:
+    branches: 
+      -main
+    paths:
+      - services/** 
+      - .github/workflows/rtest.yaml
+  pull_request:
   workflow_dispatch:
 
 jobs:
