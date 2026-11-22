@@ -1,0 +1,76 @@
+name: rtest
+
+on:
+  workflow_dispatch:
+
+jobs:
+  filters:
+    runs-on: ubuntu-24.04 
+    outputs:
+      services: ${{steps.filter.outputs.changes}}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: filter
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        with:
+          token: ${{ secrets.GITHUB_TOKEN}}
+          filters: .github/rutils/file-filters.yaml
+
+  test:
+    runs-on: ubuntu-24.04
+    needs: filters
+    strategy:
+      fail-fast: false
+      matrix:
+        services: ${{fromJson(needs.filters.outputs.services)}}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: setup Nodejs environment 
+        if: ${{ startsWith(matrix.services, 'services/node/') || startsWith(matrix.services,'services/react/')}}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 
+        with:
+          node-version-file: ${{matrix.services}}/package.json
+          cache: "npm"
+          cache-dependency-path: ${{matrix.services}}/package-lock.json 
+
+      - name: setup go environment
+        if: ${{ startsWith(matrix.services, 'services/go/')}}
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
+        with:
+          go-version-file: ${{matrix.services}}/go.mod
+          cache-dependency-path: ${{matrix.services}}/go.sum
+      - name: Install poetry 
+        if: ${{ startsWith(matrix.services,'services/python/') }}
+        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263
+
+
+      - name: setup python environment
+        if: ${{ startsWith(matrix.services, 'services/python/')}}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version-file: ${{matrix.services}}/pyproject.toml
+          cache: "poetry"
+          cache-dependency-path: ${{matrix.services}}/poetry.lock
+
+      - name: Install task
+        uses: supplypike/setup-bin@8e3f88b4f143d9b5c3497f0fc12d45c83c123787
+        with:
+          uri: "https://github.com/go-task/task/releases/download/v3.54.0/task_linux_amd64.tar.gz"
+          name: task
+          version: v3.54.0
+
+      - name: Install node deps 
+        working-directory: ${{ matrix.services }}
+        run: |
+          task install-ci
+
+      - name: Run tests
+        working-directory: ${{ matrix.services }}
+        run: |
+          task test
+
