@@ -1,0 +1,20 @@
+name: Build and Push Container Images
+
+on:
+   workflow_dispatch:
+
+jobs:
+    build-push-container-images:
+        runs-on: ubuntu-24.04
+        steps:
+          - name: checkout code
+            uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+            with:
+                fetch-depth: 0
+
+          - name: Install task
+            uses: supplypike/setup-bin@8e3f88b4f143d9b5c3497f0fc12d45c83c123787
+            with:
+              uri: "https://github.com/go-task/task/releases/download/v3.54.0/task_linux_amd64.tar.gz"
+              name: task
+              version: v3.54.0
