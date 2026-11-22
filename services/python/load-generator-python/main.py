@@ -4,7 +4,7 @@ import requests
 import signal
 import sys
 import logging
-
+//what
 terminate = False
 
 def run_load_generator(api_url, delay_ms):
