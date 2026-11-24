@@ -34,7 +34,7 @@ jobs:
       environment: ${{steps.set-output.outputs.environment}}
     steps:
       - name: checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
 
       - name: filter
         id: filter
@@ -45,25 +45,21 @@ jobs:
 
       - name: Set Output
         id: set-output
+        env:
+          CHANGES: ${{steps.filter.outputs.changes}}
         run: |
-          # if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
-          #   echo 'services=["${{ inputs.services }}"]' >> "$GITHUB_OUTPUT"
-          #   echo "environment=deployment" >> "SGITHUB_OUTPUT"
-          if [[ "${{ github.ref_type }}" == "tag" ]]; then 
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+            echo 'services=["${{ inputs.services }}"]' >> "$GITHUB_OUTPUT"
+            echo "environment=deployment" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref_type }}" == 'tag' ]]; then 
             tag="${GITHUB_REF_NAME}"
             svc="${tag%%@*}"
             echo "services=[\"$svc\"]" >> "$GITHUB_OUTPUT"
             echo "environment=production" >> "$GITHUB_OUTPUT" 
-
           else 
-            # changes = "${{ steps.filter.outputs.changes }}"
-            # echo $changes
-            # changes= '${changes#\[}'
-            # changes= '${changes%\]}'
-            # service_json = $(jq -cn --arg server '$changes' '$server | split(",")')
-            echo "services=${{ steps.filter.outputs.changes}}"  >> "$GITHUB_OUTPUT"
+            echo "services=${CHANGES}"  >> "$GITHUB_OUTPUT"
             echo "environment=staging" >> "$GITHUB_OUTPUT"
-            echo "I AM NOT HERE"
+            echo $CHANGES
           fi
 
   build-push-container-images:
@@ -73,10 +69,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        services: ${{ fromJson(needs.filters.outputs.services) }}
+        services: ${{ fromJSON(needs.filters.outputs.services) }}
     steps:
       - name: checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
         with:
           fetch-depth: 0
 
@@ -102,8 +98,12 @@ jobs:
         env:
           ENVIRONMENT: ${{needs.filters.outputs.environment}}
           SERVICES: ${{matrix.services}}
+          INPUT_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || ''}}
         run: |
-          if [[ "$ENVIRONMENT" == "production" ]]; then
+          if [[ -n $INPUT_VERSION ]]; then
+             version=$INPUT_VERSION
+             image_tag=$(task utils:manual-version-tag -- $INPUT_VERSION)
+          elif [[ "$ENVIRONMENT" == "production" ]]; then
             version=$(task utils:generate-version -- "$SERVICES")
             image_tag=$(task utils:generate-version-tag -- "$SERVICES")
           else
