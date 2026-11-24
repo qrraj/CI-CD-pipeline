@@ -1,4 +1,7 @@
 {
+  "repository": {
+    "default_branch": "main"
+  },
   "inputs": {
     "service": "services/go/api-golang",
     "version": "foobarbaz"

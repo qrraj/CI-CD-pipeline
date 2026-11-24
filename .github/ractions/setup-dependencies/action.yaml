@@ -2,12 +2,21 @@ name: "Set-up Dependencies"
 
 description: :"setup-tool/dependencies"
 
+inputs:
+  install_task:
+    description: install task if true
+    default: "true"
+  task_version:
+    description: version of task to install
+    default: "v3.54.0"
+
 runs:
   using: composite
   steps:
     - name: Install task
+      if: ${{inputs.install_task == 'true'}}
       uses: supplypike/setup-bin@8e3f88b4f143d9b5c3497f0fc12d45c83c123787
       with:
-        uri: "https://github.com/go-task/task/releases/download/v3.54.0/task_linux_amd64.tar.gz"
+        uri: "https://github.com/go-task/task/releases/download/${{inputs.task_version}}/task_linux_amd64.tar.gz"
         name: task
-        version: v3.54.0
+        version: ${{inputs.task_version}}
