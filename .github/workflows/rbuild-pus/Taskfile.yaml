@@ -1,19 +1,30 @@
-version: '3'
+version: "3"
 
 env:
   GITHUB_TOKEN:
     sh: gh auth token
 
 tasks:
-    trigger-workflow:
-        desc: "Trigger workflow using act"
-        cmds:
-          - | 
-            act workflow_dispatch \
-              --container-architecture linux/amd64 \
-              -s GITHUB_TOKEN="{{.GITHUB_TOKEN}}" \
-              -e {{.PWD}}/event.json \
-              -P ubuntu-24.04=catthehacker/ubuntu:act-22.04 \
-              --directory ../../.. \
-              -W .github/workflows/rbuild-push.yaml 
+  trigger-workflow:
+    desc: "Trigger workflow using act"
+    cmds:
+      - |
+        act workflow_dispatch \
+          --container-architecture linux/amd64 \
+          -s GITHUB_TOKEN="{{.GITHUB_TOKEN}}" \
+          -e {{.PWD}}/event.json \
+          -P ubuntu-24.04=catthehacker/ubuntu:act-22.04 \
+          --directory ../../.. \
+          -W .github/workflows/rbuild-push.yaml
 
+  trigger-push-event:
+    desc: "Trigger github action push event using act"
+    cmds:
+      - |
+        act push \
+          --container-architecture linux/amd64 \
+          -s GITHUB_TOKEN="{{.GITHUB_TOKEN}}" \
+          -e {{.PWD}}/push-tag-event.json \
+          -P ubuntu-24.04=catthehacker/ubuntu:act-22.04 \
+          --directory ../../.. \
+          -W .github/workflows/rbuild-push.yaml
