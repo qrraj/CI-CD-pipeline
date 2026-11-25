@@ -40,7 +40,7 @@ jobs:
         id: filter
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
         with:
-          token: ${{ secrets.GITHUB_TOKEN}}
+          token: ${{ secrets.GITHUB_TOKEN }}
           filters: .github/rutils/file-filters.yaml
 
       - name: Set Output
@@ -80,7 +80,7 @@ jobs:
         uses: ./.github/ractions/setup-dependencies
 
       # - name: Auth to DockerHub
-      #   if: ${{!env.ACT}}
+      #   if: ${{ !env.ACT }}
       #   uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1
       #   with:
       #     username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -125,3 +125,13 @@ jobs:
       #     platforms: linux/amd64
       #     cache-from: type=gha
       #     cache-to: type=gha,mode=max
+
+      # - name: Trigger Deploy
+      #   if: ${{ ! env.ACT }}
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     gh workflow run rupdate-gitops.yaml \
+      #       -f services=${{ matrix.services }}
+      #       -f version=${{ steps.image-tag.outputs.version }}
+      #       -f environment=${{ needs.filters.outputs.environment }}

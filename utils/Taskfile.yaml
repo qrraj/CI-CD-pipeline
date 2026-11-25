@@ -69,7 +69,6 @@ tasks:
     vars:
       EXCLUDED_FILES: |
         {{.TASKFILE_DIR}}/Taskfile.yaml
-        MORE_FILES_CAN_GO_HERE
     cmds:
       - cmd: |
           if [ -z "{{.NEW_TAG}}" ] || [ -z "{{.IDENTIFIER_COMMENT}}" ] || [ -z "{{.STARTING_PATH}}" ]; then
